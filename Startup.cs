@@ -40,7 +40,7 @@ namespace Buecherwurm
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -50,6 +50,7 @@ namespace Buecherwurm
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllerRoute("/index/{id:int}", "/index/{id:int?}");
             });
         }
     }

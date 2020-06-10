@@ -11,15 +11,16 @@ namespace Buecherwurm.Pages
     public class IndexModel : PageModel
     {
         private readonly ILogger<IndexModel> _logger;
+        public int id;
 
         public IndexModel(ILogger<IndexModel> logger)
         {
             _logger = logger;
         }
 
-        public void OnGet()
+        public void OnGet(int id)
         {
-
+            this.id = id;
         }
     }
 }
