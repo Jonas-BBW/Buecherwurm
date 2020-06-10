@@ -5,8 +5,73 @@
     ViewData["Title"] = "Katalog";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Katalog</h1>
-    <p>ID: @Model.id</p>
-    <p>String: @Model.jsonString</p>
+    <div class="text-center">
+        <h1 class="display-4">Katalog</h1><br>
+    </div>
+
+    <div class="row justify-content-center">
+    <div class="col-auto">
+    @{
+        if(@Model.product != null)
+        {
+            <table class="table table-responsive">
+                <thead>
+                <tr>
+                    <td>Titel</td>
+                    <td>@Model.product["title"]</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>ID</td>
+                    <td>@Model.product["productId"]</td>
+                </tr>
+                <tr>
+                    <td>Kategorie</td>
+                    <td>@Model.product["category"]</td>
+                </tr>
+                <tr>
+                    <td>Ausleihzeit</td>
+                    <td>@Model.product["lendTime"]</td>
+                </tr>
+                <tr>
+                    <td>Typ</td>
+                    <td>@Model.product["lendType"]</td>
+                </tr>
+                </tbody>
+            </table>
+        }
+        else
+        {
+            foreach(var product in @Model.products)
+            {
+                <table class="table table-responsive">
+                    <thead>
+                    <tr>
+                        <td>Titel</td>
+                        <td>@product["title"]</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>ID</td>
+                        <td>@product["productId"]</td>
+                    </tr>
+                    <tr>
+                        <td>Kategorie</td>
+                        <td>@product["category"]</td>
+                    </tr>
+                    <tr>
+                        <td>Ausleihzeit</td>
+                        <td>@product["lendTime"]</td>
+                    </tr>
+                    <tr>
+                        <td>Typ</td>
+                        <td>@product["lendType"]</td>
+                    </tr>
+                    </tbody>
+                </table>
+            }
+        }
+    }</div></div>
 </div>
