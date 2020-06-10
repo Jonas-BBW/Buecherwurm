@@ -1,0 +1,11 @@
+@page "/lend/{id:int?}"
+@{/*The question mark makes the constraint optional*/}
+@model LendModel
+@{
+    ViewData["Title"] = "Ausleihe";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Ausleihe</h1>
+    <p>ID: @Model.id</p>
+</div>

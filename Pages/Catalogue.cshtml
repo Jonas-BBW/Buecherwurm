@@ -1,0 +1,12 @@
+@page "/catalogue/{id:int?}"
+@{/*The question mark makes the constraint optional*/}
+@model CatalogueModel
+@{
+    ViewData["Title"] = "Katalog";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Katalog</h1>
+    <p>ID: @Model.id</p>
+    <p>String: @Model.jsonString</p>
+</div>

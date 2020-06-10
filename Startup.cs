@@ -50,7 +50,9 @@ namespace Buecherwurm
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
-                endpoints.MapControllerRoute("/index/{id:int}", "/index/{id:int?}");
+                endpoints.MapControllerRoute("Lend", "/lend/{id:int?}");
+                endpoints.MapControllerRoute("Catalogue", "/catalogue/{id:int?}");
+
             });
         }
     }
