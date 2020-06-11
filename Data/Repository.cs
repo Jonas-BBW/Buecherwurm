@@ -26,7 +26,6 @@ namespace Buecherwurm.Data
             products = new List<Dictionary<string, string>>();
 
             foreach(var p in arr){
-                Console.WriteLine(p);
                 products.Add(ReadDictionary(Json.DeserializeObject(p)));
             }
         }
@@ -119,8 +118,6 @@ namespace Buecherwurm.Data
             var content = new StringContent(data, Encoding.UTF8, "application/json");
 
             var responseContent = await content.ReadAsStringAsync();
-
-            Console.WriteLine(responseContent);
 
             var response = await _client.PostAsync("katalog/buch/", content);
 
