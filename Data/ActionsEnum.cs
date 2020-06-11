@@ -11,6 +11,7 @@ namespace Buecherwurm.Data
         {
             catalogueGet,
             cataloguePost,
+            catalogueDelete
         }
     }
 }

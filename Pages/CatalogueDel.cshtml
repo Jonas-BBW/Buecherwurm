@@ -1,0 +1,21 @@
+@page "/catalogue/delete/{id:int}"
+@model CatalogueDelModel
+@{
+    ViewData["Title"] = "Löschen";
+
+    if(@Model.result == "OK.")
+    {
+        Response.Redirect("/Catalogue");
+    }
+}
+
+
+<div class="text-center">
+    <h1 class="display-4">Löschen des Produkts mit der ID @Model.id fehlgeschlagen</h1><br/>
+    <code>@Model.result</code><br/>
+
+    <a href="/catalogue">
+        <button type="button" class="btn btn-primary" style="margin-top: 10vh;">Zurück zum Katalog</button>
+    </a>
+
+</div><br/>

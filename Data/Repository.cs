@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using JsonSerializer;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Buecherwurm.Data
 {
@@ -11,6 +12,7 @@ namespace Buecherwurm.Data
     {
         private static HttpClient _client;
         public string jsonString;
+        public string result;
         public Dictionary<string, string>  product;
         public List<Dictionary<string, string>> products;
 
@@ -20,11 +22,6 @@ namespace Buecherwurm.Data
             jsonString = GetAllProducts().Result;
             
             var arr = Json.DeserializeArray(jsonString);
-
-            foreach (var p in arr)
-            {
-                Console.WriteLine(p);
-            }
 
             products = new List<Dictionary<string, string>>();
 
@@ -36,14 +33,25 @@ namespace Buecherwurm.Data
 
         public Repository(Actions.Type type, int id)
         {
-            init();
-            jsonString = GetProductById(id).Result;
-            product = ReadDictionary(Json.DeserializeObject(jsonString));
+            switch(type)
+            {
+                case Actions.Type.catalogueGet:
+                init();
+                jsonString = GetProductById(id).Result;
+                product = ReadDictionary(Json.DeserializeObject(jsonString));
+                break;
+
+                case Actions.Type.catalogueDelete:
+                init();
+                result = catalogueDelete(id).Result;
+                break;
+            }
         }
 
-        public Repository(Actions.Type type, string jsonString)
+        public Repository(Actions.Type type, string data)
         {
             init();
+            result = cataloguePost(data).Result;
         }
 
 
@@ -68,16 +76,8 @@ namespace Buecherwurm.Data
         {
             var result = new Dictionary<string, string>();
 
-            Console.WriteLine(Json.SerializeObject(dictionary));
-
             foreach(var kvp in dictionary){
-                Console.WriteLine($"{kvp.Key}: {kvp.Value}");
                 result[Json.DeserializeString(kvp.Key)] = Json.DeserializeString(kvp.Value);
-            }
-
-            foreach (var kvp in result)
-            {
-                Console.WriteLine($"{kvp.Key}: {kvp.Value}");
             }
 
             return result;
@@ -99,6 +99,45 @@ namespace Buecherwurm.Data
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStringAsync();
+            }
+            return "ERROR";
+        }
+
+        private static async Task<string> catalogueDelete(int id)
+        {
+            var response = await _client.DeleteAsync("katalog/" + id);
+
+            if(response.IsSuccessStatusCode)
+            {
+                return "OK.";
+            }
+            return "ERROR";
+        }
+
+        private static async Task<string> cataloguePost(string data)
+        {
+            var content = new StringContent(data, Encoding.UTF8, "application/json");
+
+            var responseContent = await content.ReadAsStringAsync();
+
+            Console.WriteLine(responseContent);
+
+            var response = await _client.PostAsync("katalog/buch/", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return "OK.";
+            }
+            return "ERROR";
+        }
+
+        private static async Task<string> cataloguePut(HttpContent data)
+        {
+            var response = await _client.PutAsync("katalog/", data);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return "OK.";
             }
             return "ERROR";
         }

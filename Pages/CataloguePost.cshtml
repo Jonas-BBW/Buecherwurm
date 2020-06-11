@@ -1,0 +1,20 @@
+@page "/catalogue/new/"
+@model CataloguePostModel
+@{
+    ViewData["Title"] = "Neues Produkt hinzufügen";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Neues Produkt hinzufügen</h1><br/>
+
+    <a href="/">
+        <button type="button" class="btn btn-success" style="margin-top: 10vh;">Hinzufügen</button>
+    </a>
+    <a href="/">
+        <button type="button" class="btn btn-primary" style="margin-top: 10vh;">Zurück zur Startseite</button>
+    </a>
+    <p>
+        @Model.result
+    </p>
+
+</div><br/>

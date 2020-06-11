@@ -52,6 +52,8 @@ namespace Buecherwurm
                 endpoints.MapRazorPages();
                 endpoints.MapControllerRoute("Lend", "/lend/{id:int?}");
                 endpoints.MapControllerRoute("Catalogue", "/catalogue/{id:int?}");
+                endpoints.MapControllerRoute("CatalogueDelete", "/catalogue/delete{id:int}");
+                endpoints.MapControllerRoute("CataloguePost", "/catalogue/new");
 
             });
         }

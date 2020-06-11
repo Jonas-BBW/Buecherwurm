@@ -50,7 +50,7 @@ namespace JsonSerializer
             }
 
             var d = 0d;
-            if (double.TryParse(value, out d))
+            if (TryDeserializeNumber(value, out d))
             {
                 return ValueType.Number;
             }
@@ -218,12 +218,12 @@ namespace JsonSerializer
         {
             var arr = DeserializeArray(jsonArray);
 
-            if (GetValueType(index) != ValueType.Number)
+            int i = -1;
+
+            if (!TryDeserializeNumber(index, out i))
             {
                 return null;
             }
-
-            var i = Convert.ToInt32(index);
 
             if (arr.Length > i && i >= 0)
             {
@@ -294,78 +294,97 @@ namespace JsonSerializer
             return new KeyValuePair<string, string>(null, null);
         }
 
-        public static string AddKeyValuePair(string jsonObject, string serializedKey, string serializedValue, bool overwrite)
+        public static string AddKeyValuePair(string jsonObject, string key, string value, bool overwrite)
         {
             if (GetValueType(jsonObject) != ValueType.Object)
             {
                 return jsonObject;
             }
 
-            if (GetValueType(serializedValue) == ValueType.Invalid)
+            if (GetValueType(key) != ValueType.Text)
             {
-                return jsonObject;
+                key = SerializeString(key);
+            }
+
+            if (GetValueType(value) == ValueType.Invalid)
+            {
+                value = SerializeString(value);
             }
 
             var dict = DeserializeObject(jsonObject);
-            if (overwrite || GetKvpValue(jsonObject, serializedKey, true) == null)
+            if (overwrite || GetKvpValue(jsonObject, key, true) == null)
             {
-                dict.Add(serializedKey, serializedValue);
+                dict.Add(key, value);
             }
 
             return SerializeObject(dict);
         }
 
-        public static string AddArrayEntry(string jsonArray, string serializedValue)
+        public static string AddArrayEntry(string jsonArray, string value)
         {
             if (GetValueType(jsonArray) != ValueType.Array)
             {
                 return jsonArray;
             }
 
-            if (GetValueType(serializedValue) == ValueType.Invalid)
+            if (GetValueType(value) == ValueType.Invalid)
             {
-                return jsonArray;
+                value = SerializeString(value);
             }
 
             var arr = DeserializeArray(jsonArray).ToList<string>();
 
-            arr.Add(serializedValue);
+            arr.Add(value);
 
             return SerializeArray(arr.ToArray());
         }
 
-        public static string EditArrayEntry(string jsonArray, string index, string serializedValue)
+        public static string CreateNewObject()
+        {
+            return "{ }";
+        }
+
+        public static string CreateNewArray()
+        {
+            return "[ ]";
+        }
+
+        public static string EditArrayEntry(string jsonArray, string index, string value)
         {
             if (GetValueType(jsonArray) != ValueType.Array)
             {
                 return jsonArray;
             }
 
-            if (GetValueType(serializedValue) == ValueType.Invalid)
+            int i = -1;
+
+            if (!TryDeserializeNumber(index, out i))
             {
                 return jsonArray;
             }
 
-            var arr = DeserializeArray(jsonArray);
-
-            if (GetValueType(index) != ValueType.Number)
+            if (GetValueType(value) == ValueType.Invalid)
             {
-                return null;
+                value = SerializeString(value);
             }
 
-            var i = Convert.ToInt32(index);
-
+            var arr = DeserializeArray(jsonArray);
 
             if (arr.Length > i && i >= 0)
             {
-                arr[i] = serializedValue;
+                arr[i] = value;
             }
 
             return SerializeArray(arr.ToArray());
         }
 
-        public static string AddValue(string jsonData, string[] keysOrIndices, string serializedValue, bool caseSensitive, bool overwrite, bool addArrayEntry)
+        public static string AddValue(string jsonData, string[] keysOrIndices, string value, bool caseSensitive, bool overwrite, bool addArrayEntry)
         {
+            if (GetValueType(value) == ValueType.Invalid)
+            {
+                value = SerializeString(value);
+            }
+
             if (keysOrIndices.Length > 1)
             {
                 if (GetValueType(jsonData) == ValueType.Object)
@@ -374,7 +393,7 @@ namespace JsonSerializer
                     var l = keysOrIndices.ToList<string>();
                     l.RemoveAt(0);
                     var oldValue = GetValue(jsonData, key, caseSensitive);
-                    var newValue = AddValue(jsonData, l.ToArray(), serializedValue, caseSensitive, overwrite, addArrayEntry);
+                    var newValue = AddValue(jsonData, l.ToArray(), value, caseSensitive, overwrite, addArrayEntry);
                     return AddKeyValuePair(jsonData, key, newValue, true);
                 }
 
@@ -384,7 +403,7 @@ namespace JsonSerializer
                     var l = keysOrIndices.ToList<string>();
                     l.RemoveAt(0);
                     var oldValue = GetValue(jsonData, index, caseSensitive);
-                    var newValue = AddValue(jsonData, l.ToArray(), serializedValue, caseSensitive, overwrite, addArrayEntry);
+                    var newValue = AddValue(jsonData, l.ToArray(), value, caseSensitive, overwrite, addArrayEntry);
                     return EditArrayEntry(jsonData, index, newValue);
                 }
             }
@@ -395,20 +414,20 @@ namespace JsonSerializer
                 var key = keysOrIndices[0];
                 if (addArrayEntry)
                 {
-                    var value = GetValue(jsonData, key, true);
+                    var targetValue = GetValue(jsonData, key, true);
                     if (GetValueType(value) == ValueType.Array)
                     {
-                        return AddArrayEntry(jsonData, serializedValue);
+                        return AddArrayEntry(jsonData, targetValue);
                     }
                 }
 
-                return AddKeyValuePair(jsonData, key, serializedValue, overwrite);
+                return AddKeyValuePair(jsonData, key, value, overwrite);
             }
 
             if (GetValueType(jsonData) == ValueType.Array)
             {
                 var index = keysOrIndices[0];
-                return EditArrayEntry(jsonData, index, serializedValue);
+                return EditArrayEntry(jsonData, index, value);
             }
 
             return jsonData;
@@ -488,18 +507,140 @@ namespace JsonSerializer
                 result += character;
             }
 
-            Console.WriteLine(result);
+            
 
             return result;
         }
 
+        public static string SerializeNumber(double value)
+        {
+            return value.ToString().Replace(',', '.');
+        }
+
+        public static string SerializeNumber(float value)
+        {
+            return value.ToString().Replace(',', '.');
+        }
+
+        public static string SerializeNumber(int value)
+        {
+            return value.ToString();
+        }
+
+        public static bool TryDeserializeNumber(string stringValue, out double output)
+        {
+            double result;
+            if (double.TryParse(stringValue, out result))
+            {
+                output = result;
+                return true;
+            };
+
+            stringValue = stringValue.Replace(',', '.');
+
+            if (double.TryParse(stringValue, out result))
+            {
+                output = result;
+                return true;
+            };
+
+            output = 0;
+            return false;
+        }
+
+        public static bool TryDeserializeNumber(string stringValue, bool round, out int output)
+        {
+            double d;
+            if (TryDeserializeNumber(stringValue, out d)){
+                if (round)
+                {
+                    d = Math.Round(d);
+                }
+
+                output = Convert.ToInt32(d);
+                return true;
+            }
+
+            output = 0;
+            return false;
+        }
+
+        public static bool TryDeserializeNumber(string stringValue, out int output)
+        {
+            int result;
+
+            if (int.TryParse(stringValue, out result))
+            {
+                output = result;
+                return true;
+            }
+
+            output = 0;
+            return false;
+        }
+
+        public static int DeserializeNumber(string stringValue, bool round, int defaultValue)
+        {
+            int result;
+            if (TryDeserializeNumber(stringValue, round, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        public static int DeserializeNumber(string stringValue, int defaultValue)
+        {
+            int result;
+            if (TryDeserializeNumber(stringValue, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        public static double DeserializeNumber(string stringValue, double defaultValue)
+        {
+            double result;
+            if (TryDeserializeNumber(stringValue, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        public static string SerializeKeyValuePair(string key, string val)
+        {
+            if (GetValueType(key) != ValueType.Text)
+            {
+                key = SerializeString(key);
+            }
+
+            if (GetValueType(val) == ValueType.Invalid)
+            {
+                val = SerializeString(val);
+            }
+
+            return $"{key}: {val}";
+        }
+
         public static string SerializeKeyValuePair(KeyValuePair<string, string> keyValuePair)
         {
-            return $"{keyValuePair.Key}: {keyValuePair.Value}";
+            return SerializeKeyValuePair(keyValuePair.Key, keyValuePair.Value);
         }
 
         public static KeyValuePair<string, string> DeserializeKeyValuePair(string jsonData)
         {
+            jsonData = RemoveFormatting(jsonData);
             var i = jsonData.IndexOf(',');
             var result = new KeyValuePair<string, string>(jsonData.Substring(0, i - 1), jsonData.Substring(i + 2));
             return result;
@@ -605,6 +746,7 @@ namespace JsonSerializer
             var bracket = 0;
             var kvpIndexArray = new int[4];
             var arrayIndex = 0;
+            var escape = false;
 
             jsonObject = RemoveFormatting(jsonObject);
 
@@ -612,21 +754,32 @@ namespace JsonSerializer
             {
                 var character = jsonObject[i];
 
+                if (character == '\\')
+                {
+                    i++;
+                    continue;
+                }
+
+                if (character == '"')
+                {
+                    escape = !escape;
+                    if (bracket == 1 && arrayIndex < 2)
+                    {
+                        kvpIndexArray[arrayIndex] = i;
+                        arrayIndex += 1;
+                    }
+                }
+
+                if (escape)
+                {
+                    continue;
+                }
 
                 if (character == ':')
                 {
                     if (bracket == 1 && arrayIndex == 2)
                     {
                         kvpIndexArray[arrayIndex] = i + 2;
-                        arrayIndex += 1;
-                    }
-                }
-
-                if (character == '"')
-                {
-                    if (bracket == 1 && arrayIndex < 2)
-                    {
-                        kvpIndexArray[arrayIndex] = i;
                         arrayIndex += 1;
                     }
                 }
